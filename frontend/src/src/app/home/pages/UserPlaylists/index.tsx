@@ -32,7 +32,10 @@ const PlaylistPage = () => {
           succeeded: (playlists) => (
             <>
               {playlists.length > 0 ? (
-                <PlaylistList playlists={playlists} userId={cookies.get("userId").toString()} />
+                <PlaylistList
+                  playlists={playlists}
+                  userId={cookies.get("userId").toString()}
+                />
               ) : (
                 <span>Nenhuma playlist encontrada!</span>
               )}
