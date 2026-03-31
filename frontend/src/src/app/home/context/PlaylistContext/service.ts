@@ -358,4 +358,135 @@ export default class PlaylistService {
       });
     }
   }
+
+  async addContributorToPlaylist(
+    playlistId: string,
+    contributorId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      this.dispatch({
+        type: PlaylistStateActionType.CHANGE_RS_ADD_CONTRIBUTOR_IN_PLAYLIST,
+        payload: RequestStatus.loading(),
+      });
+
+      const result = await this.apiService.update(
+        `/playlists/addContributor/${playlistId}/${contributorId}`,
+        { userId: userId },
+      );
+
+      result.handle({
+        onSuccess: (response) => {
+          this.dispatch({
+            type: PlaylistStateActionType.CHANGE_RS_ADD_CONTRIBUTOR_IN_PLAYLIST,
+            payload: RequestStatus.success(response.data),
+          });
+
+          // refetch playlist
+          this.getPlaylist(playlistId);
+        },
+        onFailure: (error) => {
+          this.dispatch({
+            type: PlaylistStateActionType.CHANGE_RS_ADD_CONTRIBUTOR_IN_PLAYLIST,
+            payload: RequestStatus.failure(error),
+          });
+        },
+      });
+    } catch (_) {
+      this.dispatch({
+        type: PlaylistStateActionType.CHANGE_RS_ADD_CONTRIBUTOR_IN_PLAYLIST,
+        payload: RequestStatus.failure(new AppUnknownError()),
+      });
+    }
+  }
+
+  async removeContributorToPlaylist(
+    playlistId: string,
+    contributorId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      this.dispatch({
+        type: PlaylistStateActionType.CHANGE_RS_REMOVE_CONTRIBUTOR_IN_PLAYLIST,
+        payload: RequestStatus.loading(),
+      });
+
+      const result = await this.apiService.update(
+        `/playlists/removeContributor/${playlistId}/${contributorId}`,
+        { userId: userId },
+      );
+
+      result.handle({
+        onSuccess: (response) => {
+          this.dispatch({
+            type: PlaylistStateActionType.CHANGE_RS_REMOVE_CONTRIBUTOR_IN_PLAYLIST,
+            payload: RequestStatus.success(response.data),
+          });
+
+          // refetch playlist
+          this.getPlaylist(playlistId);
+        },
+        onFailure: (error) => {
+          this.dispatch({
+            type: PlaylistStateActionType.CHANGE_RS_REMOVE_CONTRIBUTOR_IN_PLAYLIST,
+            payload: RequestStatus.failure(error),
+          });
+        },
+      });
+    } catch (_) {
+      this.dispatch({
+        type: PlaylistStateActionType.CHANGE_RS_REMOVE_CONTRIBUTOR_IN_PLAYLIST,
+        payload: RequestStatus.failure(new AppUnknownError()),
+      });
+    }
+  }
+
+  async getUser(userId: string): Promise<UserModel> {
+    try {
+      const result = await this.apiService.get(`/users/${userId}`);
+      return new Promise<UserModel>((resolve, reject) => {
+        result.handle({
+          onSuccess: (response) => {
+            const userData = response.data;
+            const user = new UserModel(userData);
+            resolve(user);
+          },
+          onFailure: (error) => {
+            // Handle failure
+            console.error(`Failed to fetch user with ID ${userId}:`, error);
+            reject(error);
+          },
+        });
+      });
+    } catch (error) {
+      // Handle generic error
+      console.error("Error fetching user:", error);
+      throw error;
+    }
+  }
+
+  async getUserArray(userIds: string[]): Promise<UserModel[]> {
+    try {
+      const users: UserModel[] = [];
+      for (const userId of userIds) {
+        const result = await this.apiService.get(`/users/${userId}`);
+        result.handle({
+          onSuccess: (response) => {
+            const userData = response.data;
+            const user = new UserModel(userData);
+            users.push(user);
+          },
+          onFailure: (error) => {
+            // Handle failure
+            console.error(`Failed to fetch user with ID ${userId}:`, error);
+          },
+        });
+      }
+      return users;
+    } catch (error) {
+      // Handle generic error
+      console.error("Error fetching users:", error);
+      return [];
+    }
+  }
 }
